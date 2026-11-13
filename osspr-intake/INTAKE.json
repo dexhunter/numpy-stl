@@ -1,0 +1,50 @@
+[
+  {
+    "upstream_repo": "wolph/numpy-stl",
+    "head_sha": "3f64e7729d6f9e8ed75f2d789278ab975d80a4bf",
+    "file": "stl/stl.py",
+    "function": "stl.stl.BaseStl._load_ascii",
+    "native_test_cmd": "python -m pytest tests/test_ascii.py --basetemp=tmp",
+    "bench_cmd": "python osspr-intake/harness/bench_load_ascii.py",
+    "baseline_median_ms": 154.3025,
+    "baseline_noise_pct": 8.1167,
+    "tests_pass_on_baseline": true,
+    "why": "Default ASCII load (no optional speedups) parses every facet in Python and pops lines off the front of each 4 KiB chunk. A 20k-triangle scan takes ~154 ms; a single buffer pass should beat 20% and return the same vertices. The 8% spread is well under that, because the loop is interpreter-bound."
+  },
+  {
+    "upstream_repo": "wolph/numpy-stl",
+    "head_sha": "3f64e7729d6f9e8ed75f2d789278ab975d80a4bf",
+    "file": "stl/stl.py",
+    "function": "stl.stl.BaseStl._write_ascii",
+    "native_test_cmd": "python -m pytest tests/test_ascii.py --basetemp=tmp",
+    "bench_cmd": "python osspr-intake/harness/bench_write_ascii.py",
+    "baseline_median_ms": 141.2774,
+    "baseline_noise_pct": 1.8991,
+    "tests_pass_on_baseline": true,
+    "why": "Default ASCII save formats and writes seven lines per triangle from Python. The same 20k-triangle patch takes ~141 ms with a 1.9% spread. One byte buffer, still using {:.9g} so the text stays lossless, should beat 20%."
+  },
+  {
+    "upstream_repo": "wolph/numpy-stl",
+    "head_sha": "3f64e7729d6f9e8ed75f2d789278ab975d80a4bf",
+    "file": "stl/ply.py",
+    "function": "stl.ply.read_ply",
+    "native_test_cmd": "python -m pytest tests/test_ply.py --basetemp=tmp",
+    "bench_cmd": "python osspr-intake/harness/bench_read_ply.py",
+    "baseline_median_ms": 114.4040,
+    "baseline_noise_pct": 3.6228,
+    "tests_pass_on_baseline": true,
+    "why": "Binary PLY has no speedups path: each vertex is struct.unpack_from and each face is two read calls. A 51k-triangle scanner-style file takes ~114 ms with a 3.6% spread. A dtype view of the common float xyz / list-uchar-int layout should beat 20% with the same vertices and indices."
+  },
+  {
+    "upstream_repo": "wolph/numpy-stl",
+    "head_sha": "3f64e7729d6f9e8ed75f2d789278ab975d80a4bf",
+    "file": "stl/base.py",
+    "function": "stl.base.BaseMesh.is_convex",
+    "native_test_cmd": "python -m pytest tests/test_mesh_properties.py::test_is_convex --basetemp=tmp",
+    "bench_cmd": "python osspr-intake/harness/bench_is_convex.py",
+    "baseline_median_ms": 100.2956,
+    "baseline_noise_pct": 3.9753,
+    "tests_pass_on_baseline": true,
+    "why": "Each face projects every vertex with its own matmul, so a convex mesh cannot return early. A 1,728-triangle box takes ~100 ms with a 4.0% spread and the cost is quadratic. One batched plane test should beat 20% and return the same boolean."
+  }
+]
