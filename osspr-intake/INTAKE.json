@@ -1,0 +1,60 @@
+[
+  {
+    "upstream_repo": "wolph/numpy-stl",
+    "head_sha": "cd7441986a49dc06fa638dbe0a1ea5d6bc0a4a94",
+    "file": "stl/ply.py",
+    "function": "_read_binary_vertices",
+    "native_test_cmd": "python3 -m pytest",
+    "bench_cmd": "python3 osspr-intake/harness/read_binary_vertices.py",
+    "baseline_median_ms": 144.5644,
+    "baseline_noise_pct": 1.6723,
+    "tests_pass_on_baseline": true,
+    "workload": "400k packed little-endian float32 xyz vertices, the layout binary write_ply emits.",
+    "notes": "struct.unpack_from runs once per vertex. For this packed xyz float layout, np.frombuffer into an (N, 3) float32 array is bitwise identical and a local check dropped the call from about 145 ms to under 1 ms; the Python loop can stay for unusual property layouts so existing tests still pass. Overlap checked 2026-11-16: no open PRs or issues. PRs merged since 2026-10-17 touched rotate_using_matrix (#248), is_closed (#249), RemoveDuplicates.map (#250), CI/deps (#251-#253, #256), _write_ascii float conversion (#254), and is_convex (#255). dexhunter's PRs on wolph/numpy-stl are only #249, #254, and #255. ply.py is not in those diffs."
+  },
+  {
+    "upstream_repo": "wolph/numpy-stl",
+    "head_sha": "cd7441986a49dc06fa638dbe0a1ea5d6bc0a4a94",
+    "file": "stl/ply.py",
+    "function": "_build_mesh_data",
+    "native_test_cmd": "python3 -m pytest",
+    "bench_cmd": "python3 osspr-intake/harness/build_mesh_data.py",
+    "baseline_median_ms": 249.6883,
+    "baseline_noise_pct": 2.3436,
+    "tests_pass_on_baseline": true,
+    "workload": "200k triangle index tuples into a 100k-vertex array, the list _triangulate produces.",
+    "notes": "Each triangle is written into the structured array from Python. One integer-array index assignment reproduced this workload bitwise and a local check cut the call from about 250 ms to about 36 ms; out-of-range indices can keep the current per-face error path. Overlap checked 2026-11-16: no open PRs or issues. Merged PRs since 2026-10-17 are #248 rotate_using_matrix, #249 is_closed, #250 RemoveDuplicates.map, #251-#253 and #256 CI/deps, #254 _write_ascii float conversion, and #255 is_convex. dexhunter's PRs are only #249, #254, and #255. ply.py is not in those diffs."
+  },
+  {
+    "upstream_repo": "wolph/numpy-stl",
+    "head_sha": "cd7441986a49dc06fa638dbe0a1ea5d6bc0a4a94",
+    "file": "stl/ply.py",
+    "function": "write_ply",
+    "native_test_cmd": "python3 -m pytest",
+    "bench_cmd": "python3 osspr-intake/harness/write_ply_peak_mem.py",
+    "metric_kind": "peak_memory_bytes",
+    "baseline_value": 48002380,
+    "baseline_noise_pct": 0.0,
+    "metric_benchmark": "python3 osspr-intake/harness/write_ply_peak_mem.py",
+    "labeled_data": null,
+    "tests_pass_on_baseline": true,
+    "workload": "200k-triangle strip written as binary little-endian PLY into a memory buffer.",
+    "notes": "write_ply materializes one Python tuple per triangle and struct.pack's every vertex and index. Doing np.unique inside write_ply and writing one packed little-endian record array produced byte-identical output on this strip and lowered tracemalloc peak by about 8.6 MiB (48,002,380 to 39,004,132). Overlap checked 2026-11-16: no open PRs or issues. Merged PRs since 2026-10-17 are #248 rotate_using_matrix, #249 is_closed, #250 RemoveDuplicates.map, #251-#253 and #256 CI/deps, #254 _write_ascii float conversion, and #255 is_convex. dexhunter's PRs are only #249, #254, and #255. ply.py is not in those diffs."
+  },
+  {
+    "upstream_repo": "wolph/numpy-stl",
+    "head_sha": "cd7441986a49dc06fa638dbe0a1ea5d6bc0a4a94",
+    "file": "stl/base.py",
+    "function": "BaseMesh.update_centroids",
+    "native_test_cmd": "python3 -m pytest",
+    "bench_cmd": "python3 osspr-intake/harness/update_centroids_peak_mem.py",
+    "metric_kind": "peak_memory_bytes",
+    "baseline_value": 48034892,
+    "baseline_noise_pct": 0.0001,
+    "metric_benchmark": "python3 osspr-intake/harness/update_centroids_peak_mem.py",
+    "labeled_data": null,
+    "tests_pass_on_baseline": true,
+    "workload": "1,000,000-triangle strip; tracemalloc starts after the mesh buffer exists.",
+    "notes": "np.mean([v0, v1, v2]) stacks three (N, 3) float32 copies to reduce three values. (v0 + v1 + v2) / float32(3) matched np.mean bitwise on normal, large, tiny, and mixed float32 triangles and dropped peak from 48,034,892 bytes to about 12,066,752, saving about 34 MiB. Overlap checked 2026-11-16: no open PRs or issues. Merged PRs since 2026-10-17 touched rotate_using_matrix (#248), is_closed (#249), RemoveDuplicates.map (#250), _write_ascii (#254), and is_convex (#255), not update_centroids. dexhunter's PRs are only #249, #254, and #255. get_mass_properties was not used."
+  }
+]
